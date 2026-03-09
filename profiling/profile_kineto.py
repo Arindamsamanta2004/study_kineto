@@ -1,7 +1,7 @@
 """
 Kineto Profiler Script
 
-Profiles attention benchmark using PyTorch's Kineto profiler.
+Profiles vector addition benchmark using PyTorch's Kineto profiler.
 Captures GPU kernel traces, memory usage, and stack traces.
 """
 
@@ -16,7 +16,7 @@ import sys
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from model.attention_benchmark import create_benchmark_from_config
+from benchmarks.vector_add_benchmark import create_benchmark_from_config
 
 
 def profile_with_kineto(benchmark, config, output_dir):
@@ -24,7 +24,7 @@ def profile_with_kineto(benchmark, config, output_dir):
     Profile benchmark using PyTorch Kineto profiler.
 
     Args:
-        benchmark: AttentionBenchmark instance
+        benchmark: VectorAddBenchmark instance
         config: Configuration dictionary
         output_dir: Directory to save results
     """
@@ -67,14 +67,16 @@ def profile_with_kineto(benchmark, config, output_dir):
         profile_memory=profiling_config.get('profile_memory', True),
         with_stack=profiling_config.get('with_stack', True),
         with_flops=True,
-        with_modules=True,  # Enable module tracking for attention layers
+        with_modules=False,  # No modules in simple kernel
     ) as prof:
         for i in range(profile_iters):
-            with torch.profiler.record_function("attention_iteration"):
+            with torch.profiler.record_function("vector_add_iteration"):
                 benchmark.benchmark_step()
 
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
+
+            prof.step()
 
             if (i + 1) % 10 == 0:
                 print(f"  Iteration {i+1}/{profile_iters}")
@@ -143,7 +145,7 @@ def profile_with_kineto(benchmark, config, output_dir):
         "model_config": config['model'],
         "profiling_config": profiling_config,
         "memory_stats": benchmark.get_memory_stats(),
-        "estimated_flops": benchmark.get_flops_estimate(),
+        "total_elements": benchmark.total_elements,
     }
 
     # Parse kernel statistics
@@ -203,16 +205,13 @@ def profile_with_kineto(benchmark, config, output_dir):
     end_time = time.perf_counter()
 
     baseline_time_ms = (end_time - start_time) / profile_iters * 1000
-
-    # Calculate performance metrics
-    flops = benchmark.get_flops_estimate()
-    tflops = (flops / (baseline_time_ms / 1000)) / 1e12
+    bandwidth_gbs = benchmark.get_bandwidth_estimate(baseline_time_ms)
 
     print(f"Baseline time (no profiling): {baseline_time_ms:.4f} ms/iter")
-    print(f"Estimated TFLOP/s: {tflops:.2f}")
+    print(f"Estimated bandwidth: {bandwidth_gbs:.2f} GB/s")
 
     stats["baseline_time_ms_per_iter"] = baseline_time_ms
-    stats["estimated_tflops"] = tflops
+    stats["bandwidth_gbs"] = bandwidth_gbs
 
     # Update stats file
     with open(stats_file, 'w') as f:

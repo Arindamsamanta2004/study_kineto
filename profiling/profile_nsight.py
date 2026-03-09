@@ -1,7 +1,7 @@
 """
 NVIDIA NSight Compute (NCU) Profiler Script
 
-Profiles attention benchmark using NVIDIA NSight Compute.
+Profiles vector addition benchmark using NVIDIA NSight Compute.
 Captures hardware performance counters, metrics, and kernel analysis.
 """
 
@@ -16,10 +16,10 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from model.attention_benchmark import create_benchmark_from_config
+from benchmarks.vector_add_benchmark import create_benchmark_from_config
 
 
-def profile_with_nsight(benchmark, config, output_dir, ncu_path="ncu"):
+def profile_with_nsight(benchmark, config, config_path, output_dir, ncu_path="ncu"):
     """
     Profile benchmark using NVIDIA NSight Compute.
 
@@ -27,8 +27,9 @@ def profile_with_nsight(benchmark, config, output_dir, ncu_path="ncu"):
     and then profiles it with ncu.
 
     Args:
-        benchmark: AttentionBenchmark instance
+        benchmark: VectorAddBenchmark instance
         config: Configuration dictionary
+        config_path: Path to the config file
         output_dir: Directory to save results
         ncu_path: Path to ncu executable
     """
@@ -51,7 +52,7 @@ def profile_with_nsight(benchmark, config, output_dir, ncu_path="ncu"):
     metrics_str = ",".join(metrics) if metrics else ""
 
     # Get absolute path to config
-    config_path = Path(sys.argv[sys.argv.index('--config') + 1]).absolute() if '--config' in sys.argv else Path(args.config).absolute()
+    config_abs_path = Path(config_path).absolute()
 
     # Write profile script
     script_content = f"""#!/usr/bin/env python3
@@ -61,11 +62,11 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from model.attention_benchmark import create_benchmark_from_config
+from benchmarks.vector_add_benchmark import create_benchmark_from_config
 import yaml
 
 # Load config
-with open('{config_path}') as f:
+with open('{config_abs_path}') as f:
     config = yaml.safe_load(f)
 
 # Create benchmark
@@ -257,7 +258,7 @@ def main():
     benchmark = create_benchmark_from_config(config)
 
     # Run profiling
-    stats = profile_with_nsight(benchmark, config, output_dir, args.ncu_path)
+    stats = profile_with_nsight(benchmark, config, config_path, output_dir, args.ncu_path)
 
     if stats and stats.get("success"):
         print(f"\nAll results saved to: {output_dir}")
