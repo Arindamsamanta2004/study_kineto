@@ -51,8 +51,9 @@ def profile_with_nsight(benchmark, config, config_path, output_dir, ncu_path="nc
     metrics = nsight_config.get('metrics', [])
     metrics_str = ",".join(metrics) if metrics else ""
 
-    # Get absolute path to config
+    # Get absolute path to config and project root
     config_abs_path = Path(config_path).absolute()
+    project_root = Path(__file__).parent.parent.absolute()
 
     # Write profile script
     script_content = f"""#!/usr/bin/env python3
@@ -60,7 +61,8 @@ import sys
 import torch
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent))
+# Add project root to path
+sys.path.insert(0, '{project_root}')
 
 from benchmarks.vector_add_benchmark import create_benchmark_from_config
 import yaml
