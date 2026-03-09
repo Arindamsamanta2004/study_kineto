@@ -1,0 +1,29 @@
+name: "config_a"
+description: "Small shapes - cache friendly"
+
+model:
+  batch_size: 32
+  seq_len: 4096
+  hidden_dim: 256
+  num_heads: 8
+  head_dim: 32  # hidden_dim / num_heads
+  dtype: "float32"
+
+profiling:
+  warmup_iterations: 10
+  profile_iterations: 100
+  record_shapes: true
+  profile_memory: true
+  with_stack: true
+
+nsight:
+  metrics:
+    - "sm__cycles_elapsed.avg"
+    - "sm__cycles_elapsed.avg.per_second"
+    - "gpu__time_duration.sum"
+    - "dram__throughput.avg.pct_of_peak_sustained_elapsed"
+    - "sm__sass_thread_inst_executed_op_ffma_pred_on.sum"
+    - "sm__sass_thread_inst_executed_op_fp32_pred_on.sum"
+    - "l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum"
+    - "l1tex__t_bytes_pipe_lsu_mem_global_op_st.sum"
+    - "sm__warps_active.avg.pct_of_peak_sustained_active"
