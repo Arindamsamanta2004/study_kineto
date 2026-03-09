@@ -114,7 +114,6 @@ print("Profiling complete!")
     # Add print summary
     ncu_cmd.extend([
         "--print-summary", "per-kernel",
-        "--print-details-all",
     ])
 
     # Add the python command
