@@ -149,7 +149,7 @@ print("Profiling complete!")
             ncu_cmd,
             capture_output=True,
             text=True,
-            timeout=600  # 10 minute timeout
+            timeout=3600  # 1 hour timeout for --set full
         )
 
         # Save stdout and stderr
@@ -202,7 +202,9 @@ print("Profiling complete!")
         return stats
 
     except subprocess.TimeoutExpired:
-        print("\nERROR: NCU profiling timed out (10 minutes)")
+        print("\nERROR: NCU profiling timed out (1 hour)")
+        print("Try running the generated script manually for no timeout:")
+        print(f"  {shell_script}")
         return None
     except FileNotFoundError:
         print(f"\nERROR: NCU executable not found: {ncu_path}")
