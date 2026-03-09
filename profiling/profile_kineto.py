@@ -156,22 +156,19 @@ def profile_with_kineto(benchmark, config, output_dir):
         kernel_info = {
             "name": evt.key,
             "count": evt.count,
-            "cpu_time_total_us": evt.cpu_time_total,
-            "self_cpu_time_total_us": evt.self_cpu_time_total,
+            "cpu_time_total_us": getattr(evt, 'cpu_time_total', 0),
+            "self_cpu_time_total_us": getattr(evt, 'self_cpu_time_total', 0),
+            "cpu_memory_usage": getattr(evt, 'cpu_memory_usage', 0),
+            "self_cpu_memory_usage": getattr(evt, 'self_cpu_memory_usage', 0),
         }
 
         if torch.cuda.is_available():
             kernel_info.update({
-                "cuda_time_total_us": evt.cuda_time_total,
-                "self_cuda_time_total_us": evt.self_cuda_time_total,
-                "cuda_memory_usage": evt.cuda_memory_usage,
-                "self_cuda_memory_usage": evt.self_cuda_memory_usage,
+                "cuda_time_total_us": getattr(evt, 'cuda_time_total', 0),
+                "self_cuda_time_total_us": getattr(evt, 'self_cuda_time_total', 0),
+                "cuda_memory_usage": getattr(evt, 'cuda_memory_usage', 0),
+                "self_cuda_memory_usage": getattr(evt, 'self_cuda_memory_usage', 0),
             })
-
-        kernel_info.update({
-            "cpu_memory_usage": evt.cpu_memory_usage,
-            "self_cpu_memory_usage": evt.self_cpu_memory_usage,
-        })
 
         kernel_stats.append(kernel_info)
 
